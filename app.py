@@ -1,20 +1,30 @@
-from flask import Flask
-from utils.db import init_db
-from routes.auth import auth
-from routes.protected_routes import protected
+# app.py
+from flask import Flask, jsonify, request, render_template
 
 app = Flask(__name__)
 
-# Initialize the database
-init_db(app)
-
-# Register blueprints
-app.register_blueprint(auth, url_prefix='/auth')
-app.register_blueprint(protected, url_prefix='/protected')
+# Sample tasks data
+tasks = [
+    {"id": 1, "task": "Learn Flask"},
+    {"id": 2, "task": "Implement APIs"}
+]
 
 @app.route('/')
 def home():
-    return "Welcome to BBAP WebApp!"
+    return render_template('index.html')
 
-if __name__ == '__main__':
+# To get all tasks
+@app.route('/tasks', methods=['GET'])
+def get_tasks():
+    return jsonify({"tasks": tasks})
+
+# To create a new task
+@app.route('/tasks', methods=['POST'])
+def create_task():
+    new_task = request.json
+    new_task["id"] = len(tasks) + 1  # Simple ID generation
+    tasks.append(new_task)
+    return jsonify(new_task), 201
+
+if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

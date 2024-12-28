@@ -1,0 +1,60 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BBAP Task Manager</title>
+</head>
+<body>
+    <h1>BBAP Task Manager</h1>
+
+    <h2>Tasks</h2>
+    <ul id="task-list">
+        <!-- Tasks will be listed here -->
+    </ul>
+
+    <h2>Add New Task</h2>
+    <form id="task-form">
+        <input type="text" id="task-input" placeholder="Enter task" required>
+        <button type="submit">Add Task</button>
+    </form>
+
+    <script>
+        // Fetch tasks from API and display
+        fetch('/tasks')
+            .then(response => response.json())
+            .then(data => {
+                const taskList = document.getElementById('task-list');
+                data.tasks.forEach(task => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = task.task;
+                    taskList.appendChild(listItem);
+                });
+            });
+
+        // Handle new task submission
+        document.getElementById('task-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const taskInput = document.getElementById('task-input');
+            const newTask = { task: taskInput.value };
+
+            fetch('/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newTask)
+            })
+            .then(response => response.json())
+            .then(task => {
+                const taskList = document.getElementById('task-list');
+                const listItem = document.createElement('li');
+                listItem.textContent = task.task;
+                taskList.appendChild(listItem);
+                taskInput.value = '';  // Clear input
+            });
+        });
+    </script>
+</body>
+</html>
