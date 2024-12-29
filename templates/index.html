@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BBAP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1><h1>Welcome to BBAP</h1>
+    </h1>
+
+        <!-- Sign up -->
+        <h2>Sign up</h2>
+        <form id="registerForm">
+            <input type="text" id="registerUsername" placeholder="Username" required>
+            <input type="password" id="registerPassword" placeholder="Password" required>
+            <button type="submit">Sign up</button>
+        </form>
+
+        <!-- Login-->
+        <h2>Login</h2>
+        <form id="loginForm">
+            <input type="text" id="loginUsername" placeholder="Username" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+
+        <h2>Tasks:</h2>
+        <form id="taskForm">
+            <input type="text" id="taskName" placeholder="taskName" required>
+            <button type="submit">Add Task</button>
+        </form>
+        <ul id="taskList"></ul>
+    </div>
+
+    <script>
+        // Signup user
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+
+            fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.msg);
+                document.getElementById('registerUsername').value = '';
+                document.getElementById('registerPassword').value = '';
+            })
+            .catch(error => alert('Error: ' + error));
+        });
+
+// Login
+document.getElementById('loginForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+
+    fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.access_token) {
+            alert('Login Successfully');
+            localStorage.setItem('jwt', data.access_token);  // ذخیره توکن JWT در localStorage
+        } else {
+            alert(data.msg);
+        }
+    })
+    .catch(error => alert('Error: ' + error));
+});
+
+        //َAdd Task
+        document.getElementById('taskForm').addEventListener('submit', function(event) {
+         event.preventDefault();
+
+    const taskName = document.getElementById('taskName').value;
+    const jwt = localStorage.getItem('jwt'); 
+
+    fetch('/protected/tasks', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + jwt  
+        },
+        body: JSON.stringify({ task: taskName })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.msg);
+        document.getElementById('taskName').value = '';
+    })
+    .catch(error => alert('Error: ' + error));
+});
+    </script>
+</body>
+</html>
