@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BBAP Task Manager</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>BBAP Task Manager</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.task.label }}: {{ form.task }}
+        {{ form.submit }}
+    </form>
+
+    <ul>
+        {% for task in tasks %}
+        <li>
+            {{ task.task }}
+            <a href="{{ url_for('delete_task', id=task.id) }}">Delete</a>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

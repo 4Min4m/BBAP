@@ -1,53 +1,65 @@
-from flask import Flask, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, jsonify, request, render_template, redirect, url_for
+from utils.db import db, init_db
+from models.task import Task
+from forms.task_form import TaskForm
 
 app = Flask(__name__)
-
-# Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tasks.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+app.config['SECRET_KEY'] = 'your_secret_key_here'
+init_db(app)
 
-# Task model
-class Task(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    task = db.Column(db.String(200), nullable=False)
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    form = TaskForm()
+    if form.validate_on_submit():
+        new_task = Task(task=form.task.data)
+        db.session.add(new_task)
+        db.session.commit()
+        return redirect(url_for('index'))
 
-    def __repr__(self):
-        return f"<Task {self.task}>"
+    tasks = Task.query.all()
+    return render_template('tasks.html', form=form, tasks=tasks)
 
-# Initialize DB manually (remove before_first_request decorator)
-def init_db():
-    with app.app_context():
-        db.create_all()
-
-@app.route('/')
-def home():
-    return "Welcome to BBAP Task Manager"
-
-# To get all tasks
 @app.route('/tasks', methods=['GET'])
 def get_tasks():
     tasks = Task.query.all()
-    return jsonify({"tasks": [task.task for task in tasks]})
-
-# To create a new task
-@app.route('/tasks', methods=['POST'])
-def create_task():
-    new_task = request.json
-    task = Task(task=new_task['task'])
-    db.session.add(task)
-    db.session.commit()
-    return jsonify({"task": task.task}), 201
-
-# No task was found
-@app.route('/tasks', methods=['GET'])
-def fetch_tasks():
-    tasks = Task.query.all()
-    if tasks:  # Check if there are tasks
-        return jsonify({"tasks": [task.task for task in tasks]})
+    if tasks:
+        return jsonify({"tasks": [{"id": task.id, "task": task.task} for task in tasks]})
     return jsonify({"message": "No tasks found"}), 404
 
-if __name__ == "__main__":
-    init_db()  # Explicitly call init_db
+@app.route('/tasks', methods=['POST'])
+def create_task():
+    data = request.json
+    if not data or 'task' not in data:
+        return jsonify({"message": "Invalid input"}), 400
+
+    new_task = Task(task=data['task'])
+    db.session.add(new_task)
+    db.session.commit()
+    return jsonify({"id": new_task.id, "task": new_task.task}), 201
+
+@app.route('/tasks/<int:id>', methods=['PUT'])
+def update_task(id):
+    task = Task.query.get(id)
+    if not task:
+        return jsonify({"message": "Task not found"}), 404
+
+    data = request.json
+    if 'task' not in data:
+        return jsonify({"message": "Invalid input"}), 400
+
+    task.task = data['task']
+    db.session.commit()
+    return jsonify({"message": "Task updated successfully"})
+
+@app.route('/tasks/<int:id>/delete', methods=['GET'])
+def delete_task(id):
+    task = Task.query.get(id)
+    if task:
+        db.session.delete(task)
+        db.session.commit()
+    return redirect(url_for('index'))
+
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
