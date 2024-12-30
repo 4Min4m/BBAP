@@ -8,8 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <h1><h1>Welcome to BBAP</h1>
-    </h1>
+        <h1>Welcome to BBAP</h1>
 
         <!-- Sign up -->
         <h2>Sign up</h2>
@@ -18,6 +17,7 @@
             <input type="password" id="registerPassword" placeholder="Password" required>
             <button type="submit">Sign up</button>
         </form>
+        <div id="registerMsg"></div>
 
         <!-- Login-->
         <h2>Login</h2>
@@ -26,10 +26,11 @@
             <input type="password" id="loginPassword" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
+        <div id="loginMsg"></div>
 
         <h2>Tasks:</h2>
         <form id="taskForm">
-            <input type="text" id="taskName" placeholder="taskName" required>
+            <input type="text" id="taskName" placeholder="Task Name" required>
             <button type="submit">Add Task</button>
         </form>
         <ul id="taskList"></ul>
@@ -50,59 +51,60 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.msg);
+                document.getElementById('registerMsg').textContent = data.msg;
                 document.getElementById('registerUsername').value = '';
                 document.getElementById('registerPassword').value = '';
             })
-            .catch(error => alert('Error: ' + error));
+            .catch(error => document.getElementById('registerMsg').textContent = 'Error: ' + error);
         });
 
-// Login
-document.getElementById('loginForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
 
-    const username = document.getElementById('loginUsername').value;
-    const password = document.getElementById('loginPassword').value;
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
 
-    fetch('/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username, password: password })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.access_token) {
-            alert('Login Successfully');
-            localStorage.setItem('jwt', data.access_token);  // ذخیره توکن JWT در localStorage
-        } else {
-            alert(data.msg);
-        }
-    })
-    .catch(error => alert('Error: ' + error));
-});
+            fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.access_token) {
+                    alert('Login Successfully');
+                    localStorage.setItem('jwt', data.access_token);  // Store JWT in localStorage
+                    window.location.href = '/tasks'; // Redirect to task manager
+                } else {
+                    document.getElementById('loginMsg').textContent = data.msg;
+                }
+            })
+            .catch(error => document.getElementById('loginMsg').textContent = 'Error: ' + error);
+        });
 
-        //َAdd Task
+        // Add Task
         document.getElementById('taskForm').addEventListener('submit', function(event) {
-         event.preventDefault();
+            event.preventDefault();
 
-    const taskName = document.getElementById('taskName').value;
-    const jwt = localStorage.getItem('jwt'); 
+            const taskName = document.getElementById('taskName').value;
+            const jwt = localStorage.getItem('jwt'); // Get JWT from localStorage
 
-    fetch('/protected/tasks', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + jwt  
-        },
-        body: JSON.stringify({ task: taskName })
-    })
-    .then(response => response.json())
-    .then(data => {
-        alert(data.msg);
-        document.getElementById('taskName').value = '';
-    })
-    .catch(error => alert('Error: ' + error));
-});
+            fetch('/protected/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + jwt  // Send JWT in Authorization header
+                },
+                body: JSON.stringify({ task: taskName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.msg);
+                document.getElementById('taskName').value = '';
+            })
+            .catch(error => alert('Error: ' + error));
+        });
     </script>
 </body>
 </html>
