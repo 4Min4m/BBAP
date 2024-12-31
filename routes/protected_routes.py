@@ -1,21 +1,30 @@
-from flask import Blueprint, request, jsonify, redirect, url_for
+from flask import Blueprint, request, jsonify
 from utils.db import db
-from models import Task
+from models.task import Task
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 protected = Blueprint('protected', __name__)
 
-# Add task
+# Get all tasks
+@protected.route('/tasks', methods=['GET'])
+@jwt_required()
+def get_tasks():
+    tasks = Task.query.all()
+    task_list = [{"id": task.id, "task": task.task} for task in tasks]
+    return jsonify({"tasks": task_list}), 200
+
+# Add a new task
 @protected.route('/tasks', methods=['POST'])
+@jwt_required()
 def add_task():
     data = request.get_json()
     task_name = data.get('task')
-    new_task = Task(name=task_name)
+    new_task = Task(task=task_name)
     db.session.add(new_task)
     db.session.commit()
-    return jsonify({"msg": "Task added successfully!"})
+    return jsonify({"message": "Task added successfully!"}), 201
 
-# Delete task
+# Delete a task
 @protected.route('/tasks/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_task(id):

@@ -3,24 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BBAP Task Manager</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <title>Tasks</title>
 </head>
 <body>
-    <h1>BBAP Task Manager</h1>
-    <form method="POST">
-        {{ form.hidden_tag() }}
-        {{ form.task.label }}: {{ form.task }}
-        {{ form.submit }}
-    </form>
-
+    <h1>Tasks</h1>
     <ul>
         {% for task in tasks %}
-        <li>
-            {{ task.task }}
-            <a href="{{ url_for('protected.delete_task', id=task.id) }}" onclick="return confirm('Are you sure you want to delete this task?');">Delete</a>
-        </li>
+            <li>{{ task.title }}: {{ task.description }}</li>
         {% endfor %}
     </ul>
+    <a href="/">Back to Home</a>
 </body>
 </html>
